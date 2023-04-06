@@ -1,17 +1,12 @@
-const express = require('express'); // Require module express vào project
-const app = express(); // Tạo một app mới
-const port = 8080; // Định nghĩa cổng để chạy ứng dụng NodeJS của bạn trên server
-
-// Require user route
+const express = require('express');
+const app = express();
+const port = 8080; 
 const userRoute = require('./routes/user')
 
-app.set('views', './views'); // Thư mục views nằm cùng cấp với file app.js
-app.set('view engine', 'pug'); // Sử dụng pug làm view engine
-
-app.use(express.json()) // for parsing application/json
-app.use(express.urlencoded({ extended: true })) // for parsing application/x-www-form-urlencoded
-
-// Dùng userRoute cho tất cả các route bắt đầu bằng '/users'
+app.set('views', './views'); 
+app.set('view engine', 'pug'); 
+app.use(express.json()) 
+app.use(express.urlencoded({ extended: true })) 
 app.use('/user', userRoute);
 
 app.get('/', function(req, res){
