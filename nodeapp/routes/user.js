@@ -1,6 +1,8 @@
 const express = require('express');
 const user_router = express.Router();
 
+
+
 var users = [
 	{
 		"id": 1,
@@ -22,9 +24,17 @@ user_router.get('/', function(req, res){
 	res.send(users);
 })
 
+function validate_age(req,res,next)
+{
+    var user = req.body
+    if (user.age<=0) {
+        res.status(400).send("Con nho qua, lo hoc di chau")
+    }
+    else
+    next()
+}
 
-
-user_router.post('/', (req, res) => {
+user_router.post('/',validate_age, (req, res) => {
     var user = req.body;
     id++;
     user.id = id;
@@ -52,7 +62,7 @@ user_router.get('/:id', (req, res) => {
 	
 })
 
-user_router.put('/:id', (req,res)=> {
+user_router.put('/:id',validate_age, (req,res)=> {
     var user = req.body
     console.log(req.body)
     id = parseInt(req.params.id)
