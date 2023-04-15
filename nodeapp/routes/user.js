@@ -1,5 +1,8 @@
 const express = require('express');
+const mysql = require('mysql');
 const user_router = express.Router();
+const connection = require('./db')
+
 
 
 
@@ -19,9 +22,17 @@ var users = [
 ]
 id = 3;
 
+
+
 user_router.get('/', function(req, res){
-    res.status(200);
-	res.send(users);
+    
+    connection.query("SELECT * FROM users",(err,rows)=>{
+        if (err) throw err;
+        res.json(rows);
+    
+      })
+
+
 })
 
 function validate_age(req,res,next)
@@ -33,14 +44,25 @@ function validate_age(req,res,next)
     else
     next()
 }
+function validate_name(req,res,next)
+{
+    const vietnameseRegex = /^[a-vxyỳọáầảấờễàạằệếýộậốũứĩõúữịỗìềểẩớặòùồợãụủíỹắẫựỉỏừỷởóéửỵẳẹèẽổẵẻỡơôưăêâđ]+$/i;
+    let user = req.body;
+    if (!vietnameseRegex.test(user.fullname))
+    {
+        res.status(400).send("Khong phai nguoi viet, ko cho dk ")
+    }
+    else
+    next()
+}
 
-user_router.post('/',validate_age, (req, res) => {
+
+user_router.post('/',validate_age,validate_name, (req, res) => {
     var user = req.body;
-    id++;
-    user.id = id;
-	users.push(user)
-    console.log(user);
-    res.status(201);
+    res.status(201)
+    connection.query(`INSERT INTO users(fullname,age,gender) VALUES(?,?,?)`,[user.fullname,parseInt(user.age),parseInt(user.gender)],function(err,result,fields){
+        if (err) throw err;
+    });
     res.send(user)
     
 })
@@ -49,48 +71,41 @@ user_router.get('/:id', (req, res) => {
 	var user = users.find( (user) => {
 		return user.id == parseInt(req.params.id);
 	});
-   
-    if (user)
+
+    connection.query(`SELECT * FROM users where id = (?)`,[parseInt(req.params.id)],function(err,result,fields)
     {
-        res.status(200);
-        res.send(user);
-    }
-    else{
+        if (err) throw err;
+        if (result) res.json(result)
+        else
         res.send(404);
-    }
+    });
+
 
 	
 })
 
-user_router.put('/:id',validate_age, (req,res)=> {
+user_router.put('/:id',validate_age,validate_name, (req,res)=> {
     var user = req.body
-    console.log(req.body)
-    id = parseInt(req.params.id)
-    i = 0
-    for ( i = 0;i<users.length;i++)
-    if (id = users[i].id) break;
-    user.id = id;
-    users[i] = user;
+    connection.query(`UPDATE users set fullname = ?, age = ?, gender = ? WHERE id = ?`,[user.fullname,user.age,user.gender,parseInt(req.params.id)],function(err,result,fields)
+    {
+        if (err) throw err;
+        
+    });
+
+
     res.send(204);
     
 })
 user_router.delete('/:id', (req,res)=> {
     
     id = parseInt(req.params.id)
-    i = 0
-    for ( i = 0;i<users.length;i++)
-    if (users[i])
-    if (id == users[i].id) break;
-    if (users[i])
-    {
-    if (users[i].id==id)
-    {
-    users = users.filter(function(item) {
-        return item.id !== id
-    })
-    res.send(204);}
-    }
-    else res.send(404);
+    
+    connection.query('DELETE FROM users WHERE id = ?', [id], function(error, results, fields) {
+    
+        if (error) throw error;
+        console.log(`Deleted `);
+      });
+    res.send(200);
     
     
 })
